@@ -1,0 +1,3 @@
+# With CRLF line endings (core.autocrlf on Windows) bash cannot run the script.
+*.sh text eol=lf
+*.md text eol=lf
