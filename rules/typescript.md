@@ -13,6 +13,7 @@ paths:
 - **Import Node built-ins with the `node:` prefix**: `import fs from 'node:fs'`.
 
 ## Types
+- Intersect only meaningful types: `T & null` and `T & undefined` are always `never`, `T & any` is always `any`, and `& {}` adds nothing. Use a union (`T | null`) when the value may be missing, and drop the empty `{}`.
 - Don't put redundant members in unions: in `'a' | string`, the `'a'` is redundant. Give a repeated union a `type` alias.
 - Remove unnecessary casts and `!` assertions. Use `string` and `number`, never the `String`/`Number` wrappers.
 - For an optional property use `?` **or** `| undefined`, not both. Don't pass an explicit `undefined` to an optional parameter.
@@ -78,7 +79,6 @@ Write code that already complies with each one; the ones marked **critical** bre
 - "super()" should be invoked appropriately
 - "typeof" expressions should only be compared to valid values
 - Getters and setters should access the expected fields
-- Type intersections should use meaningful types
 - Table cells should reference their headers
 - Regular expressions should be syntactically valid
 - Literals should not be used as functions
