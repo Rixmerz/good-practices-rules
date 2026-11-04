@@ -101,9 +101,34 @@ scan_tokens() {
       if (name ~ /^(Dockerfile|Containerfile)/ || tolower(name) ~ /\.dockerfile$/) print "@docker"
       if (name == "angular.json") print "@angular"
       if (name ~ /\.component\.ts$/) print "@angular"
+      if ($0 ~ /\/\.github\/workflows\/[^\/]+\.ya?ml$/ || name ~ /^action\.ya?ml$/) print "@gha"
+      if (name ~ /^(docker-)?compose[^\/]*\.ya?ml$/) print "@compose"
+      if (name ~ /^kustomization\.ya?ml$/ || name == "Chart.yaml") print "@k8s"
+      if ($0 ~ /\/(k8s|kubernetes|manifests|charts|helm)\/.*\.ya?ml$/) print "@k8s"
       n = split(name, parts, ".")
       if (n > 1 && parts[1] != "") print tolower(parts[n])
     }' | sort -u
+  scan_frameworks "$root" "${prune[@]}"
+  return 0
+}
+
+# Frameworks are found by name in the dependency manifests, not by file extension.
+scan_frameworks() {
+  local root="$1"
+  shift
+  local manifest
+  while IFS= read -r manifest; do
+    case "$manifest" in
+      */deno.json|*/deno.jsonc) echo "@deno" ;;
+    esac
+    if grep -Eq '"(jsr:|npm:)?@?hono(@[^"]*)?"|jsr:@hono/hono|npm:hono' "$manifest"; then
+      echo "@hono"
+    fi
+    if grep -Eq '\$fresh/|@fresh/core' "$manifest"; then
+      echo "@fresh"
+    fi
+  done < <(find "$root" \( -type d \( "$@" \) -prune \) -o -type f \
+    \( -name deno.json -o -name deno.jsonc -o -name package.json -o -name import_map.json \) -print 2>/dev/null)
   return 0
 }
 
@@ -111,13 +136,20 @@ scan_tokens() {
 rules_for() {
   local token="$1"
   case "$token" in
-    ts|tsx|js|jsx|mjs|cjs|mts|cts) echo "typescript typescript-style typescript-tests general" ;;
+    ts|js|mjs|cjs|mts|cts) echo "typescript typescript-style typescript-tests general" ;;
     @angular) echo "angular typescript typescript-style typescript-tests html css general" ;;
     java) echo "java java-style java-tests general" ;;
     py|pyi) echo "python python-tests general" ;;
-    go) echo "go general" ;;
+    go) echo "go go-tests general" ;;
     php) echo "php general" ;;
-    kt|kts) echo "general" ;;
+    kt|kts) echo "kotlin kotlin-tests general" ;;
+    cs|csproj|vb|vbproj) echo "csharp csharp-tests general" ;;
+    rb|rake) echo "ruby general" ;;
+    rs) echo "rust general" ;;
+    swift) echo "swift general" ;;
+    scala|sc|sbt) echo "scala general" ;;
+    tf|tfvars|hcl) echo "terraform" ;;
+    jsx|tsx) echo "react typescript typescript-style typescript-tests general" ;;
     html|htm) echo "html" ;;
     css|scss|sass|less) echo "css" ;;
     xml|xsd|xsl|xslt|wsdl) echo "xml" ;;
@@ -125,6 +157,12 @@ rules_for() {
     sql|pks|pkb|pls|plb|pck|trg) echo "plsql" ;;
     ps1|psm1|psd1) echo "powershell" ;;
     @docker) echo "docker" ;;
+    @compose) echo "compose" ;;
+    @k8s) echo "kubernetes" ;;
+    @gha) echo "github-actions" ;;
+    @deno) echo "deno" ;;
+    @fresh) echo "fresh deno react" ;;
+    @hono) echo "hono" ;;
     *) echo "" ;;
   esac
   return 0
@@ -217,7 +255,7 @@ main() {
         found="$found ${token#@}"
         wanted="$wanted $mapped"
       fi
-    done < <(scan_tokens "$TARGET")
+    done < <(scan_tokens "$TARGET" | sort -u)
   fi
   wanted="$(echo "$wanted" | tr ' ' '\n' | sed '/^$/d' | sort -u | tr '\n' ' ')"
 
