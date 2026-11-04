@@ -108,6 +108,27 @@ scan_tokens() {
       n = split(name, parts, ".")
       if (n > 1 && parts[1] != "") print tolower(parts[n])
     }' | sort -u
+  scan_frameworks "$root" "${prune[@]}"
+  return 0
+}
+
+# Frameworks are found by name in the dependency manifests, not by file extension.
+scan_frameworks() {
+  local root="$1"
+  shift
+  local manifest
+  while IFS= read -r manifest; do
+    case "$manifest" in
+      */deno.json|*/deno.jsonc) echo "@deno" ;;
+    esac
+    if grep -Eq '"(jsr:|npm:)?@?hono(@[^"]*)?"|jsr:@hono/hono|npm:hono' "$manifest"; then
+      echo "@hono"
+    fi
+    if grep -Eq '\$fresh/|@fresh/core' "$manifest"; then
+      echo "@fresh"
+    fi
+  done < <(find "$root" \( -type d \( "$@" \) -prune \) -o -type f \
+    \( -name deno.json -o -name deno.jsonc -o -name package.json -o -name import_map.json \) -print 2>/dev/null)
   return 0
 }
 
@@ -139,6 +160,9 @@ rules_for() {
     @compose) echo "compose" ;;
     @k8s) echo "kubernetes" ;;
     @gha) echo "github-actions" ;;
+    @deno) echo "deno" ;;
+    @fresh) echo "fresh deno react" ;;
+    @hono) echo "hono" ;;
     *) echo "" ;;
   esac
   return 0
@@ -231,7 +255,7 @@ main() {
         found="$found ${token#@}"
         wanted="$wanted $mapped"
       fi
-    done < <(scan_tokens "$TARGET")
+    done < <(scan_tokens "$TARGET" | sort -u)
   fi
   wanted="$(echo "$wanted" | tr ' ' '\n' | sed '/^$/d' | sort -u | tr '\n' ' ')"
 

@@ -2,7 +2,7 @@
 
 Good-practice rules for [Claude Code](https://code.claude.com), installed only for the languages a project actually uses. Claude reads them while it writes code, so common bugs, security holes and maintainability problems never make it into a commit.
 
-- **1,500+ rules** across 25 technologies, written as concrete instructions with the right way to do it.
+- **1,500+ rules** across 28 technologies, written as concrete instructions with the right way to do it.
 - **Per language and on demand**: each rule file has a `paths:` frontmatter, so it enters Claude's context only when Claude reads or edits a file of that language.
 - **Multi-repo aware**: point it at a folder that holds several repos of one project and it installs the rules for all of them.
 
@@ -67,6 +67,7 @@ my-project/
 | `sh bash zsh` · `sql pks pkb…` · `ps1` | shell · plsql · powershell |
 | `Dockerfile*` · `compose*.yml` | docker · compose |
 | `tf tfvars hcl` | terraform |
+| `deno.json` · `@fresh/core` or `$fresh/` · `hono` in `deno.json`/`package.json` | deno · fresh, deno, react · hono |
 | `.github/workflows/*.yml`, `action.yml` | github-actions |
 | YAML under `k8s/`, `kubernetes/`, `manifests/`, `charts/`, `helm/`; `kustomization.yaml`, `Chart.yaml` | kubernetes |
 
@@ -75,6 +76,8 @@ my-project/
 ## Global or per project
 
 `--user-scope` puts every rule in `~/.claude/rules/good-practices/`. Each language rule still loads only when Claude touches that language. A per-project install makes sense when you want to commit the rules for the whole team. Pick one: with both, Claude loads each rule twice (the installer warns about it).
+
+`deno.md` and `hono.md` match every TypeScript file, because a framework can't be told apart by file name. A per-project install adds them only where the manifest names Deno or Hono; with `--user-scope` they load in every TypeScript project.
 
 ## Updating
 

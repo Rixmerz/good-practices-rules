@@ -9,7 +9,8 @@ All notable changes to this project are documented here. The format follows
 ### Added
 - New rule files: Kotlin (with Android/Compose and coroutines) and Kotlin tests, C#/VB.NET (async,
   ASP.NET Core, .NET Framework) and C# tests, Ruby/Rails, Rust, Swift/SwiftUI, Scala, React/Next.js,
-  Go tests, Terraform, Kubernetes/Helm, Docker Compose and GitHub Actions.
+  Go tests, Terraform, Kubernetes/Helm, Docker Compose, GitHub Actions, Deno, Fresh and Hono.
+- Installer reads `deno.json`, `package.json` and `import_map.json` to detect Deno, Fresh and Hono.
 - Installer detects `.kt`, `.cs`, `.vb`, `.rb`, `.rs`, `.swift`, `.scala`, `.tf`, `.tsx`/`.jsx` (React),
   Compose files, GitHub workflows and Kubernetes manifests.
 - Shell: `set -euo pipefail`, quoting, `mktemp`/`trap`, safe `rm`, ShellCheck.
