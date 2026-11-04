@@ -1,6 +1,6 @@
 ---
 paths:
-  - "**/*.{java,kt,ts,tsx,js,jsx,mjs,cjs,py,go,php}"
+  - "**/*.{java,kt,kts,ts,tsx,js,jsx,mjs,cjs,py,go,php,cs,vb,rb,rs,swift,scala}"
 ---
 <!-- Installed by good-practices-rules. Edit the package, not this copy: the next install replaces it. -->
 # Good practices: rules shared across languages

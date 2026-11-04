@@ -101,6 +101,10 @@ scan_tokens() {
       if (name ~ /^(Dockerfile|Containerfile)/ || tolower(name) ~ /\.dockerfile$/) print "@docker"
       if (name == "angular.json") print "@angular"
       if (name ~ /\.component\.ts$/) print "@angular"
+      if ($0 ~ /\/\.github\/workflows\/[^\/]+\.ya?ml$/ || name ~ /^action\.ya?ml$/) print "@gha"
+      if (name ~ /^(docker-)?compose[^\/]*\.ya?ml$/) print "@compose"
+      if (name ~ /^kustomization\.ya?ml$/ || name == "Chart.yaml") print "@k8s"
+      if ($0 ~ /\/(k8s|kubernetes|manifests|charts|helm)\/.*\.ya?ml$/) print "@k8s"
       n = split(name, parts, ".")
       if (n > 1 && parts[1] != "") print tolower(parts[n])
     }' | sort -u
@@ -111,13 +115,20 @@ scan_tokens() {
 rules_for() {
   local token="$1"
   case "$token" in
-    ts|tsx|js|jsx|mjs|cjs|mts|cts) echo "typescript typescript-style typescript-tests general" ;;
+    ts|js|mjs|cjs|mts|cts) echo "typescript typescript-style typescript-tests general" ;;
     @angular) echo "angular typescript typescript-style typescript-tests html css general" ;;
     java) echo "java java-style java-tests general" ;;
     py|pyi) echo "python python-tests general" ;;
-    go) echo "go general" ;;
+    go) echo "go go-tests general" ;;
     php) echo "php general" ;;
-    kt|kts) echo "general" ;;
+    kt|kts) echo "kotlin kotlin-tests general" ;;
+    cs|csproj|vb|vbproj) echo "csharp csharp-tests general" ;;
+    rb|rake) echo "ruby general" ;;
+    rs) echo "rust general" ;;
+    swift) echo "swift general" ;;
+    scala|sc|sbt) echo "scala general" ;;
+    tf|tfvars|hcl) echo "terraform" ;;
+    jsx|tsx) echo "react typescript typescript-style typescript-tests general" ;;
     html|htm) echo "html" ;;
     css|scss|sass|less) echo "css" ;;
     xml|xsd|xsl|xslt|wsdl) echo "xml" ;;
@@ -125,6 +136,9 @@ rules_for() {
     sql|pks|pkb|pls|plb|pck|trg) echo "plsql" ;;
     ps1|psm1|psd1) echo "powershell" ;;
     @docker) echo "docker" ;;
+    @compose) echo "compose" ;;
+    @k8s) echo "kubernetes" ;;
+    @gha) echo "github-actions" ;;
     *) echo "" ;;
   esac
   return 0

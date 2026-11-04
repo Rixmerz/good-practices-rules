@@ -2,7 +2,7 @@
 
 Good-practice rules for [Claude Code](https://code.claude.com), installed only for the languages a project actually uses. Claude reads them while it writes code, so common bugs, security holes and maintainability problems never make it into a commit.
 
-- **1,100+ rules** across 13 technologies, written as concrete instructions with the right way to do it.
+- **1,500+ rules** across 25 technologies, written as concrete instructions with the right way to do it.
 - **Per language and on demand**: each rule file has a `paths:` frontmatter, so it enters Claude's context only when Claude reads or edits a file of that language.
 - **Multi-repo aware**: point it at a folder that holds several repos of one project and it installs the rules for all of them.
 
@@ -54,14 +54,21 @@ my-project/
 
 | Extensions found | Rules |
 | --- | --- |
-| `ts tsx js jsx mjs cjs` | typescript, typescript-style, typescript-tests, general |
+| `ts js mjs cjs` | typescript, typescript-style, typescript-tests, general |
+| `tsx jsx` | the above + react |
 | `angular.json` or `*.component.ts` | the above + angular, html, css |
 | `java` | java, java-style, java-tests, general |
 | `py` | python, python-tests, general |
-| `go` · `php` | go · php, general |
+| `go` | go, go-tests, general |
+| `kt kts` | kotlin, kotlin-tests, general |
+| `cs vb csproj` | csharp, csharp-tests, general |
+| `php` · `rb` · `rs` · `swift` · `scala` | php · ruby · rust · swift · scala, general |
 | `html` · `css scss sass less` · `xml` | html · css · xml |
 | `sh bash zsh` · `sql pks pkb…` · `ps1` | shell · plsql · powershell |
-| `Dockerfile*` | docker |
+| `Dockerfile*` · `compose*.yml` | docker · compose |
+| `tf tfvars hcl` | terraform |
+| `.github/workflows/*.yml`, `action.yml` | github-actions |
+| YAML under `k8s/`, `kubernetes/`, `manifests/`, `charts/`, `helm/`; `kustomization.yaml`, `Chart.yaml` | kubernetes |
 
 `secrets`, `repo` and `00-how-to` are always installed and always loaded (about 3 KB). Open Claude Code in the folder you installed into, so the rules cover every repo inside it.
 
