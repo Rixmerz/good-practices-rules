@@ -11,10 +11,10 @@ paths:
 - Pipe `find` into `xargs` only with `find -print0 | xargs -0`, and write globs as `./*` (or put `--` before them) so file names starting with `-` are not read as options (SC2038, SC2035).
 - Guard destructive paths: `rm -rf "${dir:?}/"` fails if `dir` is empty instead of deleting `/` (SC2115).
 - Read lines with `while IFS= read -r line`; don't loop over `$(cat file)` or `ls` output (SC2162, SC2013, SC2045).
-- Use `[[ ... ]]` instead of `[ ... ]` for bash conditionals (SonarQube shell).
-- End every function with an explicit `return` or `exit` (SonarQube shell).
-- Assign positional parameters to named locals: `local file="$1"` (SonarQube shell).
-- Move a literal repeated many times into a variable. Merge nested `if`s (SonarQube shell).
+- Use `[[ ... ]]` instead of `[ ... ]` for bash conditionals.
+- End every function with an explicit `return` or `exit`.
+- Assign positional parameters to named locals: `local file="$1"`.
+- Move a literal repeated many times into a variable. Merge nested `if`s.
 
 ## More rules to follow
 Write code that already complies with each one; the ones marked **critical** break builds or production.

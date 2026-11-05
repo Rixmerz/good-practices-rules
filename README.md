@@ -12,7 +12,7 @@ Every rule maps to a rule of a named analyzer or linter; none is personal opinio
 
 | Rules | Source |
 | --- | --- |
-| Java, Python, TypeScript/JavaScript, React, CSS, HTML, XML, PHP, Go, Kotlin, C#/VB.NET, Ruby, Scala, Rust, PL/SQL, Docker, Terraform, Kubernetes | SonarSource analyzers (SonarQube "Sonar way" and their rule metadata) |
+| Java, Python, TypeScript/JavaScript, React, CSS, HTML, XML, PHP, Go, Kotlin, C#/VB.NET, Ruby, Scala, Rust, PL/SQL, Docker, Terraform, Kubernetes | Rule metadata of established static-analysis engines (default quality profiles) |
 | Swift | SwiftLint |
 | GitHub Actions | zizmor and actionlint |
 | Deno, Fresh | `deno lint` |

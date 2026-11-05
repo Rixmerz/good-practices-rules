@@ -20,10 +20,10 @@ All notable changes to this project are documented here. The format follows
 ## [0.2.1] - 2026-11-04
 
 ### Fixed
-- Rules added in 0.2.0 were partly written from opinion, and some "More rules to follow" titles imitated
-  SonarSource without existing. Every rule now maps to a named analyzer or linter:
-  - Kotlin, C#/VB.NET, Ruby, Scala, Rust, React, Terraform and Kubernetes: rule lists generated from the
-    SonarSource analyzers' rule metadata (exact titles, "Sonar way" profile, severity), and top rules
+- Rules added in 0.2.0 were partly written from opinion, and some "More rules to follow" titles did not match
+  any real analyzer rule. Every rule now maps to a named analyzer or linter:
+  - Kotlin, C#/VB.NET, Ruby, Scala, Rust, React, Terraform and Kubernetes: rule lists generated from
+    static-analysis rule metadata (exact titles, default profile, severity), and top rules
     trimmed to the ones that match.
   - Swift: SwiftLint. GitHub Actions: zizmor and actionlint. Deno and Fresh: `deno lint`. Hono: the
     hono-dev plugin's 36 rules.
