@@ -4,6 +4,26 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.2.1] - 2026-11-04
+
+### Fixed
+- Rules added in 0.2.0 were partly written from opinion, and some "More rules to follow" titles did not match
+  any real analyzer rule. Every rule now maps to a named analyzer or linter:
+  - Kotlin, C#/VB.NET, Ruby, Scala, Rust, React, Terraform and Kubernetes: rule lists generated from
+    static-analysis rule metadata (exact titles, default profile, severity), and top rules
+    trimmed to the ones that match.
+  - Swift: SwiftLint. GitHub Actions: zizmor and actionlint. Deno and Fresh: `deno lint`. Hono: the
+    hono-dev plugin's 36 rules.
+  - Bullets added in 0.2.0 to shell, Go, Angular and the TypeScript/Python test rules: kept only where
+    ShellCheck, `go vet`/staticcheck, angular-eslint, eslint-plugin-jest/vitest/testing-library or ruff `PT`
+    has the rule.
+
+### Removed
+- `compose.md`, `kotlin-tests.md` and `go-tests.md`: no public analyzer rules to base them on.
+
+### Added
+- README section on where the rules come from; `00-how-to.md` says not to add rules no tool checks.
+
 ## [0.2.0] - 2026-11-04
 
 ### Added
@@ -38,6 +58,7 @@ All notable changes to this project are documented here. The format follows
 - `install.sh --install-cmd`: puts a `good-practices` command on the PATH (macOS/Linux, Windows via Git Bash).
 - Safe updates: replaces its own files in place, backs up foreign ones, retires files a newer version drops.
 
+[0.2.1]: https://github.com/Rixmerz/good-practices-rules/releases/tag/v0.2.1
 [0.2.0]: https://github.com/Rixmerz/good-practices-rules/releases/tag/v0.2.0
 [0.1.1]: https://github.com/Rixmerz/good-practices-rules/releases/tag/v0.1.1
 [0.1.0]: https://github.com/Rixmerz/good-practices-rules/releases/tag/v0.1.0
