@@ -5,54 +5,53 @@ paths:
   - "**/Gemfile"
 ---
 <!-- Installed by good-practices-rules. Edit the package, not this copy: the next install replaces it. -->
-# Ruby good practices: Rails, errors and security
+# Ruby good practices: correctness and security
 
 ## Top rules
-- **Never interpolate user input into SQL**: `where("name = ?", name)` or `where(name: name)`, never `where("name = '#{name}'")`.
-- **Use strong parameters** (`params.require(:user).permit(:name, :email)`); never pass raw `params` to `create`/`update`.
-- **Rescue specific errors**, never bare `rescue` or `rescue Exception`, which also catches `Interrupt` and `SystemExit`.
-- Add `# frozen_string_literal: true` at the top of every file.
-- Commit `Gemfile.lock`.
+- **Never hard-code credentials** (passwords, tokens, keys) in source; read them from `ENV` or an encrypted credentials store.
+- **Don't write octal literals** (`0755`-style integers are easy to misread); write the value in decimal.
+- **Don't leave dead or unreachable code**: remove `if true`/`if false` blocks and statements after `return`/`raise`.
+- Don't use the same condition twice in an `if/elsif` chain or `case`; the second branch never runs.
+- Don't self-assign variables (`x = x`) or use identical operands on both sides of an operator (`a == a`).
+- Write `+=`/`-=`, never `=+`/`=-`.
 
-## Style
-- `snake_case` methods and variables, `CamelCase` classes and modules, `SCREAMING_SNAKE_CASE` constants.
-- Predicate methods end in `?`, dangerous (mutating) ones in `!`.
-- Use guard clauses instead of nested conditionals; use `unless` only without `else`.
-- Use `&.` instead of `x && x.foo`.
-- Don't use `and`/`or` for control flow; use `&&`/`||`.
-- Don't monkey-patch core classes; use refinements if you must.
+## Structure
+- Keep cognitive complexity and nesting low; extract methods instead of deep `if`/`case` nesting, and don't nest `case` statements.
+- End `if ... elsif` chains with `else`, and give `case` statements an `else`.
+- Don't give conditional branches identical implementations; merge them.
+- Don't leave methods or nested blocks empty; add a comment saying why if it is intentional.
+- Remove unused local variables and method parameters.
+- Extract string literals repeated several times into constants.
+- `snake_case` methods and parameters, `CamelCase` classes and modules.
+- Don't hard-code IP addresses; read them from configuration.
 
-## Rails
-- Avoid N+1 queries: `includes`/`preload` associations you iterate over.
-- Keep controllers thin; put logic in models or service objects.
-- Validate in the model and enforce with a database constraint (`null: false`, unique index).
-- Use `find_each` for large batches, not `all.each`.
-- Don't call `html_safe` or `raw` on user content.
-- Keep `protect_from_forgery` enabled and `config.force_ssl = true` in production.
-- Scope record lookups to the current user (`current_user.orders.find(id)`) to avoid IDOR.
-- Read secrets from `Rails.application.credentials` or `ENV`.
-
-## Security
-- Never call `eval`, `send`, `public_send`, `constantize` or `instance_variable_get` with user input.
-- Never pass user input to `system`, backticks, `%x`, `exec` or `open`; use the array form `system("cmd", arg)`.
-- Use `YAML.safe_load`, never `YAML.load` or `Marshal.load` on untrusted data.
-- Use `SecureRandom` for tokens, and `bcrypt`/`has_secure_password` for passwords.
-- Don't redirect to a URL taken from params without an allowlist.
 
 ## More rules to follow
 Write code that already complies with each one; the ones marked **critical** break builds or production.
 
+### Bugs
+- Useless "if true ..." and "if false ..." blocks should be removed
+- Variables should not be self-assigned
+- All code should be reachable
+- Identical expressions should not be used on both sides of a binary operator
+- Related "if/elsif" statements and "when" in a "case" should not have the same condition
+- Non-existent operators like "=+" should not be used
+- All branches in a conditional structure should not have exactly the same implementation
+
 ### Vulnerabilities
-- Database queries should not be vulnerable to injection attacks **(critical)**
-- OS commands should not be vulnerable to command injection attacks **(critical)**
-- Deserialization should not be vulnerable to injection attacks **(critical)**
-- HTTP request redirections should not be open to forging attacks **(critical)**
-- Dynamic code execution should not be vulnerable to injection attacks **(critical)**
-- Mass assignment should be restricted
-- Server certificates should be verified during SSL/TLS connections
-- Cipher algorithms should be robust
+- Credentials should not be hard-coded
 
 ### Code smells
-- Methods should not be too complex
-- Methods should not have too many parameters
-- Unused local variables should be removed
+- Mergeable "if" statements should be combined
+- Functions should not have too many parameters
+- Nested blocks of code should not be left empty
+- Redundant pairs of parentheses should be removed
+- Track uses of "FIXME" tags
+- Unused function parameters should be removed
+- Methods should not be empty **(critical)**
+- String literals should not be duplicated **(critical)**
+- "case" statements should have "else" clauses **(critical)**
+- "case" statements should not have too many "when" clauses
+- Two branches in a conditional structure should not have exactly the same implementation
+- Cognitive Complexity of functions should not be too high **(critical)**
+- Methods should not have identical implementations

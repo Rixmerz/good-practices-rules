@@ -2,9 +2,24 @@
 
 Good-practice rules for [Claude Code](https://code.claude.com), installed only for the languages a project actually uses. Claude reads them while it writes code, so common bugs, security holes and maintainability problems never make it into a commit.
 
-- **1,500+ rules** across 28 technologies, written as concrete instructions with the right way to do it.
+- **2,000+ rules** across 27 technologies, written as concrete instructions with the right way to do it.
 - **Per language and on demand**: each rule file has a `paths:` frontmatter, so it enters Claude's context only when Claude reads or edits a file of that language.
 - **Multi-repo aware**: point it at a folder that holds several repos of one project and it installs the rules for all of them.
+
+## Where the rules come from
+
+Every rule maps to a rule of a named analyzer or linter; none is personal opinion. The top of each file rewrites the most important ones as instructions with the right way to do it, and "More rules to follow" lists the rest by their official title.
+
+| Rules | Source |
+| --- | --- |
+| Java, Python, TypeScript/JavaScript, React, CSS, HTML, XML, PHP, Go, Kotlin, C#/VB.NET, Ruby, Scala, Rust, PL/SQL, Docker, Terraform, Kubernetes | SonarSource analyzers (SonarQube "Sonar way" and their rule metadata) |
+| Swift | SwiftLint |
+| GitHub Actions | zizmor and actionlint |
+| Deno, Fresh | `deno lint` |
+| Hono | the hono-dev plugin's lint rules |
+| Shell · Angular · test files | ShellCheck · angular-eslint · eslint-plugin-jest/vitest/testing-library, ruff `PT`, `go vet`/staticcheck |
+
+A new rule needs a source from this table, or a new row for its tool. Practices that no tool checks don't belong here.
 
 ## Install
 
@@ -59,13 +74,13 @@ my-project/
 | `angular.json` or `*.component.ts` | the above + angular, html, css |
 | `java` | java, java-style, java-tests, general |
 | `py` | python, python-tests, general |
-| `go` | go, go-tests, general |
-| `kt kts` | kotlin, kotlin-tests, general |
+| `go` | go, general |
+| `kt kts` | kotlin, general |
 | `cs vb csproj` | csharp, csharp-tests, general |
 | `php` · `rb` · `rs` · `swift` · `scala` | php · ruby · rust · swift · scala, general |
 | `html` · `css scss sass less` · `xml` | html · css · xml |
 | `sh bash zsh` · `sql pks pkb…` · `ps1` | shell · plsql · powershell |
-| `Dockerfile*` · `compose*.yml` | docker · compose |
+| `Dockerfile*` | docker |
 | `tf tfvars hcl` | terraform |
 | `deno.json` · `@fresh/core` or `$fresh/` · `hono` in `deno.json`/`package.json` | deno · fresh, deno, react · hono |
 | `.github/workflows/*.yml`, `action.yml` | github-actions |
