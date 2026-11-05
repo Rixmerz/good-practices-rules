@@ -12,9 +12,6 @@ paths:
 - Every spec file contains at least one test.
 - No duplicate cases in `it.each`/`test.each`.
 - Every async test awaits its promises or returns them; never leave a floating `expect(...).resolves`.
-- Use `await expect(fn()).rejects.toThrow(...)` for async errors.
-- Use fake timers (`vi.useFakeTimers`/`jest.useFakeTimers`) instead of real waits.
-- Restore mocks after each test (`restoreMocks: true` or `vi.restoreAllMocks()`).
 - Don't leave `.only` or `.skip` (`fit`, `fdescribe`, `xit`) in committed tests.
-- In Testing Library, query by role and label (`getByRole('button', { name: 'Save' })`), not by CSS class or test id when a role exists; use `userEvent` over `fireEvent`; `await findBy*` for async content.
+- In Testing Library, use `userEvent` over `fireEvent`, and `await findBy*` instead of `waitFor` + `getBy*` for async content.
 - Remove unnecessary `as` casts and `!` assertions in tests too.

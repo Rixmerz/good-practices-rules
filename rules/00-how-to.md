@@ -6,4 +6,5 @@ The files in this folder load by file type (their `paths:` frontmatter); `secret
 - Fix the cause, never silence a linter or analyzer warning without a one-line reason next to it.
 - Rules marked **critical** break builds or production: never leave one for later.
 - If you find a secret already committed, it must be revoked and rotated, because deleting it leaves it in git history. Tell the user; don't just replace it.
+- Every rule here comes from a named analyzer or linter. Don't add a rule that no tool checks; propose it to the user instead.
 - When reviewing code against these rules, report findings by file and say that you checked by reading, not with a tool.

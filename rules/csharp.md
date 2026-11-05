@@ -11,91 +11,348 @@ paths:
 ## Top rules
 - **Never use `async void`** except for event handlers; return `Task` so callers can await it and see exceptions.
 - **Never block on async code** with `.Result`, `.Wait()` or `GetAwaiter().GetResult()`; it deadlocks under a synchronization context. Go async all the way.
-- **Dispose what you create**: `using var stream = ...;` for every `IDisposable` you own. Don't dispose what you were given.
+- **Dispose what you create**: `using var stream = ...;` for every `IDisposable` you own, and implement `IDisposable` when your fields own one.
 - **Rethrow with `throw;`**, never `throw ex;`, which resets the stack trace.
 - **Never build SQL by concatenating strings**; use parameters (`SqlParameter`, Dapper `@param`, EF Core LINQ or `FromSqlInterpolated`).
 
 ## Async
-- Async methods end in `Async` and accept a `CancellationToken` they pass down.
+- Async methods end in `Async`; when a `CancellationToken` is available, call the overload that takes it and pass it to `await foreach` via `WithCancellation`.
 - In library code, use `ConfigureAwait(false)`.
-- Don't wrap synchronous code in `Task.Run` inside ASP.NET request handlers.
 - Don't return `null` from a method that returns `Task`; return `Task.CompletedTask` or `Task.FromResult`.
 
 ## Exceptions and logging
-- Don't catch `Exception` without rethrowing or logging it with the exception object: `logger.LogError(ex, "...")`.
-- Throw specific exceptions; use `ArgumentNullException.ThrowIfNull(arg)` for guards.
+- Don't catch `Exception` in general; when you log in a `catch`, pass the exception object: `logger.LogError(ex, "...")`.
+- Throw specific exceptions, never `Exception` or `SystemException` itself.
 - Don't throw from `Dispose`, finalizers, `Equals`, `GetHashCode`, `ToString` or static constructors.
-- Use structured logging templates: `logger.LogInformation("Order {OrderId}", id)`, not interpolation.
+- Use constant, syntactically valid logging templates: `logger.LogInformation("Order {OrderId}", id)`, not interpolation.
+- Release every lock on all paths, with `lock` or `try`/`finally`.
 
 ## Types and design
-- Enable nullable reference types (`<Nullable>enable</Nullable>`) and don't silence warnings with `!` without a reason.
-- Use `record` for immutable data and `readonly` for fields never reassigned.
-- Override `Equals` and `GetHashCode` together, and implement `IEquatable<T>` on value types.
-- Don't expose public fields; use properties. Don't expose `List<T>` publicly; use `IReadOnlyList<T>` or `IEnumerable<T>`.
-- Make a class `sealed` unless it's designed for inheritance.
-- Use `string.IsNullOrEmpty`/`IsNullOrWhiteSpace`, `StringComparison.Ordinal` for non-linguistic comparisons, and `StringBuilder` in loops.
-- Don't enumerate an `IEnumerable` twice; materialize it with `ToList()` once.
-- Use `DateTimeOffset` or UTC `DateTime`; never `DateTime.Now` for stored or compared values.
-- Inject dependencies through the constructor; don't call `new` on services or use a service locator.
-- Follow naming: `PascalCase` types, methods and properties; `camelCase` locals and parameters; `_camelCase` private fields; interfaces start with `I`.
+- Make fields only assigned in the constructor `readonly`.
+- Override `Equals` and `GetHashCode` together, and implement `IEquatable<T>` when you provide `Equals(T)`.
+- Don't expose public fields; use properties.
+- Seal private classes that nothing derives from.
+- Use `string.IsNullOrEmpty`, the `StringComparison` overloads, and `StringBuilder` instead of `+` in loops.
+- Use `DateTimeOffset`, or UTC `DateTime`, for recorded instants; never `DateTime.Now`.
+- Name types, methods and properties in `PascalCase`.
 
 ## ASP.NET Core
-- Validate input with model validation and check `ModelState` (or use `[ApiController]`).
-- Put `[Authorize]` on controllers by default and `[AllowAnonymous]` only where needed.
-- Use `[ValidateAntiForgeryToken]` on state-changing MVC actions with cookie auth.
-- Don't return exception details to clients in production; use `UseExceptionHandler` and ProblemDetails.
+- Check `ModelState.IsValid` in controller actions (or use `[ApiController]`).
+- Don't disable CSRF protection; use `[ValidateAntiForgeryToken]` on state-changing actions with cookie auth.
+- Don't enable debugging features such as `UseDeveloperExceptionPage` in production.
 - Use `IHttpClientFactory`, never `new HttpClient()` per request.
-- Keep secrets in user-secrets, environment variables or a vault, never in `appsettings.json`.
-
-## .NET Framework 4.x
-- Set `ServicePointManager.SecurityProtocol` to TLS 1.2+ or target 4.7+ and let the OS decide; never force SSL3/TLS 1.0.
-- Use `packages.config` or `PackageReference` with pinned versions; don't copy DLLs into the repo.
+- Keep secrets, connection-string passwords and JWT keys in user-secrets, environment variables or a vault, never in code or `appsettings.json`.
 
 ## Security
-- Never use `BinaryFormatter`, `NetDataContractSerializer`, `SoapFormatter` or `LosFormatter`; use `System.Text.Json`.
-- Don't set `TypeNameHandling` other than `None` in Json.NET on untrusted input.
+- Use TLS 1.2+; never force SSL3/TLS 1.0 through `ServicePointManager.SecurityProtocol`.
+- Never deserialize untrusted data with `BinaryFormatter` or an unrestricted type binder; restrict the allowed types.
 - Use `RandomNumberGenerator`, not `Random`, for tokens and keys.
-- Hash passwords with `PasswordHasher`/PBKDF2 (`Rfc2898DeriveBytes` with SHA-256 and 100k+ iterations), never MD5/SHA-1.
+- Hash passwords with `PasswordHasher`/PBKDF2 and a random salt, never MD5/SHA-1.
+- Use AES with a secure mode (GCM) and padding; don't write your own crypto.
 - Never set `ServerCertificateValidationCallback` to always return `true`.
 - Use `XmlReader` with `DtdProcessing.Prohibit`; don't load untrusted XML with `XmlDocument` and a resolver.
-- Don't pass user input to `Process.Start` or file paths without validating it.
 
 ## More rules to follow
 Write code that already complies with each one; the ones marked **critical** break builds or production.
 
 ### Bugs
-- "IDisposables" should be disposed
-- Recursion should not be infinite **(critical)**
-- Locks should be released on all paths
-- "async void" methods should not be used outside event handlers
-- Blocking calls should not be made on async code
-- "GetHashCode" should not reference mutable fields
+- Finalizers should not throw exceptions **(critical)**
+- "Equals(Object)" and "GetHashCode()" should be overridden in pairs
+- Method parameters, caught exceptions and foreach variables' initial values should not be ignored
+- Floating point numbers should not be tested for equality
+- Variables should not be self-assigned
+- Loops with at most one iteration should be refactored
+- Identical expressions should not be used on both sides of operators
+- Objects should not be created to be dropped immediately without being used
+- Related "if/else if" statements should not have the same condition
+- Collections should not be passed as arguments to their own methods
 - Values should not be uselessly incremented
-- Collection elements should not be replaced unconditionally
-- Null pointers should not be dereferenced
 - Integral numbers should not be shifted by zero or more than their number of bits-1
+- Results of integer division should not be assigned to floating point variables
+- Loops and recursions should not be infinite **(critical)**
+- Methods without side effects should not have their return values ignored
+- Locks should be released on all paths **(critical)**
+- "ToString()" method should not return null
+- A "for" loop update clause should move the counter in the right direction
+- For-loop conditions should be true at least once
+- Null pointers should not be dereferenced
+- Composite format strings should not lead to unexpected behavior at runtime **(critical)**
+- "GetHashCode" should not reference mutable fields
+- Flags enumerations should explicitly initialize all their members
+- Blocks should be synchronized on read-only fields
+- Shared resources should not be used for locking **(critical)**
+- Conditionally executed code should be reachable
+- The length returned from a stream read should be checked
+- "NaN" should not be used in comparisons
+- Non-existent operators like "=+" should not be used
+- Doubled prefix operators "!!" and "~~" should not be used
+- SQL keywords should be delimited by whitespace **(critical)**
+- "IDisposables" should be disposed **(critical)**
+- Classes with "IDisposable" members should implement "IDisposable" **(critical)**
+- Property assignments should not be made for "readonly" fields not constrained to reference types
+- Classes should "Dispose" of members from the classes' own "Dispose" methods **(critical)**
+- Generic parameters not constrained to reference types should not be compared to "null"
+- "Object.ReferenceEquals" should not be used for value types
+- "ThreadStatic" fields should not be initialized
+- "IDisposables" created in a "using" statement should not be returned
+- "ThreadStatic" should not be used on non-static fields
+- "async" methods should not return "void"
+- Delegates should not be subtracted
+- Anonymous delegates should not be used to unsubscribe from Events
+- Classes directly extending "object" should not call "base" in "GetHashCode" or "Equals"
+- Static fields should appear in the order they must be initialized 
+- Caller information parameters should come at the end of the parameter list
+- Expressions used in "Debug.Assert" should not produce side effects
+- Date and time should not be used as a type for primary keys
+- "base.Equals" should not be used to check for reference equality in "Equals" if "base" is not "object"
+- Right operands of shift operators should be integers **(critical)**
+- Classes should not have only "private" constructors
+- "string.ToCharArray()" and "ReadOnlySpan<T>.ToArray()" should not be called redundantly
+- Type inheritance should not be recursive **(critical)**
+- Optional parameters should be passed to "base" calls
+- One-way "OperationContract" methods should have "void" return type
+- Methods with "Pure" attribute should return a value 
+- Nullable type comparison should not be redundant
+- Empty nullable value should not be accessed
+- "SafeHandle.DangerousGetHandle" should not be called **(critical)**
+- Mutable, non-private fields should not be "readonly"
+- "Thread.Resume" and "Thread.Suspend" should not be used **(critical)**
+- Types should be defined in named namespaces
+- All branches in a conditional structure should not have exactly the same implementation
+- Deserialization methods should be provided for "OptionalField" members
+- Serialization event handlers should be implemented correctly
+- Calculations should not overflow
+- Collection sizes and array length comparisons should make sense
+- Exceptions should not be created without being thrown
+- Collection elements should not be replaced unconditionally
+- Empty collections should not be accessed or iterated
+- Classes should implement their "ExportAttribute" interfaces **(critical)**
+- Windows Forms entry points should be marked with STAThread
+- "ConstructorArgument" parameters should exist in constructors
+- Getters and setters should access the expected fields **(critical)**
+- "Shared" parts should not be created with "new" **(critical)**
+- "PartCreationPolicyAttribute" should be used with "ExportAttribute"
+- Calls to delegate's method "BeginInvoke" should be paired with calls to "EndInvoke" **(critical)**
+- Non-async "Task/Task<T>" methods should not return null **(critical)**
+- Regular expressions should be syntactically valid **(critical)**
+- Blocks should not be synchronized on local variables
+- Log message template should be syntactically correct **(critical)**
+- Message template placeholders should be unique
+- Blazor query parameter type should be supported
+- [JSInvokable] attribute should only be used on public methods
+- Component parameter type should match the route parameter type constraint
+- Backslash should be avoided in route templates
+- A write lock should not be released when a read lock has been acquired and vice versa **(critical)**
+- Locks should be released within the same method **(critical)**
+- Multiple "[Key]" attributes should not be used to define a composite key **(critical)**
+- Client-evaluated default values should use database functions **(critical)**
+- Potential Cartesian Explosion
+- Migrations should not narrow column types without converting existing data **(critical)**
+- The overload accepting a 'CancellationToken' should be used **(critical)**
+- "Include" calls discarded by query reshaping should be fixed **(critical)**
+- Default values should be compatible with their entity property type
+- Available cancellation tokens should be passed to "await foreach" via "WithCancellation" **(critical)**
+- Finalize method should not throw exceptions **(critical)**
+- Method parameters and caught exceptions should not be reassigned
+- Identical expressions should not be used on both sides of a binary operator
+- Related "If/ElseIf" statements should not have the same condition
+- "ToString()" method should not return Nothing
+- 'Not' boolean operator should not be repeated
+- Map values should not be replaced unconditionally
+- Property procedures should access the expected fields **(critical)**
 
 ### Vulnerabilities
-- Database queries should not be vulnerable to injection attacks **(critical)**
-- OS commands should not be vulnerable to command injection attacks **(critical)**
-- Deserialization should not be vulnerable to injection attacks **(critical)**
+- Password hashing functions should use an unpredictable salt **(critical)**
+- Credentials should not be hard-coded
+- SQL queries should not be dynamically formatted
+- Cookies should have the "secure" flag
+- A secure password should be used when connecting to a database **(critical)**
+- Pseudorandom number generators (PRNGs) should not be used in security contexts
+- Custom cryptographic algorithms should not be used **(critical)**
+- File permissions should not be set to world-accessible values
 - XML parsers should not be vulnerable to XXE attacks **(critical)**
-- Endpoints should not be vulnerable to reflected cross-site scripting attacks **(critical)**
-- I/O function calls should not be vulnerable to path injection attacks **(critical)**
-- LDAP queries should not be vulnerable to injection attacks **(critical)**
-- Server-side requests should not be vulnerable to forging attacks **(critical)**
-- Cipher algorithms should be robust
-- Encryption algorithms should be used with secure mode and padding scheme
-- Server certificates should be verified during SSL/TLS connections
-- Weak SSL/TLS protocols should not be used
-- JWT should be signed and verified with strong cipher algorithms
-- Cookies should be "secure" and "HttpOnly"
-- ASP.NET request validation should not be disabled
+- Cipher Block Chaining IVs should be unpredictable **(critical)**
+- Cookies should have the "HttpOnly" flag
+- OS commands should not rely on PATH resolution
+- Members should not have conflicting transparency annotations
+- Secure random number generators should not output predictable values **(critical)**
+- Weak SSL/TLS protocols should not be used **(critical)**
+- Cryptographic keys should be robust **(critical)**
+- LDAP connections should be authenticated **(critical)**
+- CSRF protections should not be disabled **(critical)**
+- Debugging features should not be enabled in production
+- Weak hashing algorithms should not be used **(critical)**
+- Server certificates should be verified during SSL/TLS connections **(critical)**
+- Cross-Origin Resource Sharing (CORS) policy should be restricted to trusted origins
+- Clear-text protocols should not be used
+- Passwords should not be stored in plaintext or with a fast hashing algorithm **(critical)**
+- Temporary files should not be created in publicly writable directories **(critical)**
+- Insecure temporary file creation methods should not be used **(critical)**
+- Encryption algorithms should be used with secure mode and padding scheme **(critical)**
+- Cipher algorithms should be robust **(critical)**
+- JWT should be signed and verified with strong cipher algorithms **(critical)**
+- HTTP request content length should be limited
+- ASP.NET Request Validation should not be disabled
+- Serializable objects should validate data during deserialization
+- Types allowed to be deserialized should be restricted
+- XML signatures should be validated securely
+- Secrets should not be hard-coded **(critical)**
+- Regular expressions should be executed with a timeout
+- Unsafe code blocks should not be used
+- JWT secret keys should not be disclosed **(critical)**
+- Content Security Policies should be restrictive
 
 ### Code smells
+- Method overrides should not change parameter defaults **(critical)**
+- Mergeable "if" statements should be combined
 - Methods should not have too many parameters
-- Cognitive complexity of methods should not be too high
-- Unused private members should be removed
-- "ConfigureAwait(false)" should be used in library code
+- Nested blocks of code should not be left empty
+- Inheritance tree of classes should not be too deep
+- Redundant pairs of parentheses should be removed
+- Local variables should not shadow class fields or properties
+- Utility classes should not have public constructors
+- General or reserved exceptions should never be thrown
+- Assignments should not be made from within sub-expressions
+- "Obsolete" attributes should include explanations
+- Track uses of "FIXME" tags
+- Unused private types or members should be removed
+- Exceptions should not be thrown in finally blocks **(critical)**
+- Empty arrays and collections should be returned instead of null
+- Unused method parameters should be removed
+- Methods should not be empty **(critical)**
+- "GC.Collect" should not be called **(critical)**
+- Sections of code should not be commented out
+- "for" loop stop conditions should be invariant
+- "switch" statements with many "case" clauses should have only one statement
+- NullReferenceException should not be caught
+- Constructors should only call non-overridable methods **(critical)**
+- Unused assignments should be removed
+- Two branches in a conditional structure should not have exactly the same implementation
+- Invalid casts should be avoided **(critical)**
+- "for" loop increment clauses should modify the loops' counters **(critical)**
+- Exceptions should be either logged or rethrown but not both
+- Classes named like "Exception" should extend "Exception" or a subclass
+- Short-circuit logic should be used in boolean contexts **(critical)**
+- Unnecessary mathematical comparisons should not be made **(critical)**
+- Non-constant static fields should not be visible **(critical)**
+- Arguments should be passed in the same order as the method parameters
+- Field-like events should not be virtual **(critical)**
+- Overflow checking should not be disabled for "Enumerable.Sum" **(critical)**
+- "async" and "await" should not be used as identifiers **(critical)**
+- Unused type parameters should be removed
+- Flags enumerations zero-value members should be named "None" **(critical)**
+- Properties should not make collection or array copies **(critical)**
+- Public methods should not have multidimensional array parameters **(critical)**
 - Exceptions should not be thrown from property getters
-- Fields should not have public accessibility
+- Write-only properties should not be used
+- Types and methods should not have too many generic parameters
+- Unnecessary bit operations should not be performed **(critical)**
+- Whitespace and control characters in string literals should be explicit **(critical)**
+- Boolean expressions should not be gratuitous
+- Logging templates should be constant
+- Multiline blocks should be enclosed in curly braces
+- Instance members should not write to "static" fields **(critical)**
+- Static fields should not be used in generic types
+- Fields that are only assigned in the constructor should be "readonly"
+- Methods named "Dispose" should implement "IDisposable.Dispose" **(critical)**
+- LINQ expressions should be simplified
+- Static fields should not be updated in constructors
+- Reflection should not be used to increase accessibility of classes, methods, or fields
+- "is" should not be used with "this" **(critical)**
+- "StringBuilder" data should be used
+- Multiple "OrderBy" calls should not be used
+- "Explicit" conversions of "foreach" loops should not be used **(critical)**
+- Inner class members should not shadow outer class "static" or type members **(critical)**
+- "value" contextual keyword should be used **(critical)**
+- Generic type parameters should be co/contravariant when possible
+- "params" should be used on overrides
+- Events should be invoked
+- Non-flags enums should not be used in bitwise operations **(critical)**
+- Ternary operators should not be nested
+- Method overloads with default parameter values should not overlap **(critical)**
+- "abstract" classes should not have "public" constructors
+- Type should not be examined on "System.Type" instances **(critical)**
+- Exceptions should not be explicitly rethrown
+- "[Optional]" should not be used on "ref" or "out" parameters **(critical)**
+- "[DefaultValue]" should not be used when "[DefaultParameterValue]" is meant **(critical)**
+- Composite format strings should be used correctly
+- "ServiceContract" and "OperationContract" attributes should be used together
+- "params" should not be introduced on overrides **(critical)**
+- Cognitive Complexity of methods should not be too high **(critical)**
+- Exception types should be "public" **(critical)**
+- "operator==" should not be overloaded on reference types **(critical)**
+- Exceptions should not be thrown from unexpected methods **(critical)**
+- "IDisposable" should be implemented correctly
+- Assemblies should have version information **(critical)**
+- "ISerializable" should be implemented correctly
+- Parameter names used into ArgumentException constructors should match an existing one 
+- Objects should not be disposed more than once
+- "GC.SuppressFinalize" should not be called
+- Conditionals should start on new lines **(critical)**
+- A conditionally executed single line should be denoted by indentation **(critical)**
+- Custom attributes should be marked with "System.AttributeUsageAttribute"
+- Threads should not lock on objects with weak identity **(critical)**
+- Inherited member visibility should not be decreased **(critical)**
+- Base class methods should not be hidden **(critical)**
+- Classes implementing "IEquatable<T>" should be sealed
+- Operators should be overloaded consistently
+- Non-flags enums should not be marked with "FlagsAttribute"
+- Methods should not have identical implementations
+- Native methods should be wrapped
+- Events should have proper arguments
+- Parameter validation in yielding methods should be wrapped
+- Unread "private" fields should be removed **(critical)**
+- "default" clauses should be first or last **(critical)**
+- "DebuggerDisplayAttribute" strings should reference existing members
+- "new Guid()" should not be used
+- Start index should be used instead of calling Substring **(critical)**
+- "ValueTask" should be consumed correctly **(critical)**
+- Azure Functions should be stateless
+- Client instances should not be recreated on each Azure Function invocation
+- Calls to "async" methods should not be blocking in Azure Functions **(critical)**
+- Interfaces for durable entities should satisfy the restrictions **(critical)**
+- Avoid using "DateTime.Now" for benchmarking or timing operations
+- Always set the "DateTimeKind" when creating new "DateTime" instances
+- Use "TimeZoneInfo.FindSystemTimeZoneById" without converting the timezones with "TimezoneConverter"
+- Use a format provider when parsing date and time
+- Log message template placeholders should be in the right order
+- ASP.NET controller actions should not have a route template starting with "/"
+- Use model binding instead of reading raw request data
+- A Route attribute should be added to the controller when a route template is specified at the action level
+- Controllers should not have mixed responsibilities
+- API Controllers should derive from ControllerBase instead of Controller
+- You should pool HTTP connections with HttpClientFactory
+- Value type property used as input in a controller action should be nullable, required or annotated with the JsonRequiredAttribute to avoid under-posting.
+- REST API actions should be annotated with an HTTP verb attribute
+- Awaitable method should be used
+- ModelState.IsValid should be called in controller actions **(critical)**
+- Actions that return a value should be annotated with ProducesResponseTypeAttribute containing the return type
+- First/Single should be used instead of FirstOrDefault/SingleOrDefault on collections that are known to be non-empty
+- Identifiers should not conflict with the C# 14 "field" contextual keyword **(critical)**
+- Identifiers should not conflict with the C# 14 "extension" contextual keyword **(critical)**
+- Return types named "partial" should be escaped with "@" **(critical)**
+- "scoped" should be escaped when used as an identifier or type name in parenthesized lambda parameter lists **(critical)**
+- "goto" statement should not be used
+- Parameter names should match base declaration and other partial definitions **(critical)**
+- Local functions should be marked "static" when they don't capture variables
+- Lock object fields should use "System.Threading.Lock" type
+- Procedures should not have too many parameters
+- Unused procedure parameters should be removed
+- "Select Case" statement with many "Case" clauses should have only one statement
+- Functions and procedures should comply with a naming convention
+- The "&" operator should be used to concatenate strings **(critical)**
+- Method parameters should follow a naming convention
+- Arguments should be passed in the same order as the procedure parameters
+- "Do" loops should not be used without a "While" or "Until" condition **(critical)**
+- Indexed properties with more than one parameter should not be used
+- "IsNot" should be used instead of "Not ... Is ..."
+- "On Error" statements should not be used
+- "IndexOf" checks should not be for positive numbers **(critical)**
+- If operators should not be nested
+- "Exit" statements should not be used
+- Exception types should be "Public" **(critical)**
+- "Return" statements should be used instead of assigning values to function names
+- "Option Strict" should be enabled
+- "Option Explicit" should be enabled **(critical)**
+- "GoTo" statements should not be used
+- Parameter names should match base declaration **(critical)**
