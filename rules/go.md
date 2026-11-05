@@ -15,17 +15,9 @@ paths:
 - Extract nested anonymous structs into named types.
 - Comment every blank import: `_ "github.com/lib/pq" // Postgres driver`.
 - Group consecutive parameters of the same type: `func f(a, b string)`.
-- **Never ignore an error**: handle it or return it. Wrap with context using `fmt.Errorf("load config: %w", err)`, and compare with `errors.Is`/`errors.As`, never `==` on wrapped errors or string matching.
 - Error strings start lowercase and have no trailing punctuation.
-- Don't `panic` in libraries for expected failures; return an error.
 - Close what you open with `defer`, right after checking the error: `f, err := os.Open(p); if err != nil {...}; defer f.Close()`.
-- Every goroutine has a way to stop (context or closed channel); never start one that can leak.
-- Only the sender closes a channel. Protect shared state with a `sync.Mutex` or confine it to one goroutine; run tests with `-race`.
 - Don't copy values that contain a `sync.Mutex`; pass pointers.
-- Set timeouts on `http.Client` and `http.Server` (`ReadHeaderTimeout`); never use the zero-timeout `http.DefaultClient` for external calls.
-- Build SQL with placeholders (`db.QueryContext(ctx, "... WHERE id = $1", id)`), never `fmt.Sprintf`.
-- Use `crypto/rand` for secrets, never `math/rand`.
-- Run `gofmt`, `go vet` and `staticcheck`/`golangci-lint`.
 - Commit `go.sum` together with `go.mod`.
 - Encrypt with AES-GCM; never use ECB, or CBC without authentication.
 

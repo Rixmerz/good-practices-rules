@@ -11,36 +11,44 @@ paths:
 # Good practices: Kubernetes and Helm
 
 ## Top rules
-- **Set resource `requests` and `limits`** for CPU and memory on every container.
-- **Run as non-root**: `securityContext: { runAsNonRoot: true, allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: ["ALL"] } }`.
-- **Pin image tags** (or digests); never `:latest` or no tag.
-- **Never put secrets in a `ConfigMap`** or plain `env.value`; use `Secret` via `secretKeyRef`, or an external secrets operator. Don't commit unencrypted `Secret` manifests (use Sealed Secrets/SOPS).
-
-## Workloads
-- Define `livenessProbe` and `readinessProbe` (and `startupProbe` for slow starts); readiness must not depend on downstream services.
-- Use `Deployment`/`StatefulSet`, never bare `Pod`s; set `replicas` ≥ 2 and a `PodDisruptionBudget` for services that must stay up.
-- Set `imagePullPolicy: IfNotPresent` for pinned tags.
-- Put every resource in an explicit `namespace`, never `default`.
-- Label consistently with `app.kubernetes.io/name`, `/instance`, `/version`.
+- **Never hard-code secrets or credentials** in manifests; use a `Secret` via `secretKeyRef` or an external secrets operator.
+- **Set memory and storage limits, and CPU, memory and storage requests**, on every container.
+- **Lock down the container security context**: no `privileged: true`, `allowPrivilegeEscalation: false`, and drop excessive capabilities (`capabilities: { drop: ["ALL"] }`).
+- **Pin image tags** to a specific version (or digest); never `:latest` or no tag.
 
 ## Security
-- Never use `privileged: true`, `hostNetwork`, `hostPID`, `hostIPC` or `hostPath` mounts for application workloads.
+- Never share host namespaces (`hostNetwork`, `hostPID`, `hostIPC`) or mount sensitive host paths, and never expose the Docker socket.
+- Don't run administration services (such as SSH) in containers.
 - Don't mount the service account token unless the pod calls the API (`automountServiceAccountToken: false`).
-- RBAC: no `"*"` verbs or resources, and don't bind `cluster-admin` to workloads.
-- Add a default-deny `NetworkPolicy` per namespace and allow only the traffic needed.
-- Expose services through an Ingress with TLS; avoid `NodePort` and public `LoadBalancer` for internal services.
-- Enforce the `restricted` Pod Security Standard on application namespaces.
+- RBAC: no `"*"` verbs or resources, and don't grant `pods/exec`/`pods/attach`.
+- Use TLS, not clear-text protocols, for service endpoints.
+- Don't declare the same environment variable twice in a container, and don't use deprecated API versions.
+
 
 ## More rules to follow
 Write code that already complies with each one; the ones marked **critical** break builds or production.
 
 ### Vulnerabilities
-- Running containers in privileged mode is security-sensitive **(critical)**
-- Exposing Docker sockets is security-sensitive **(critical)**
-- Allowing process privilege escalations is security-sensitive
-- Mounting sensitive file system paths is security-sensitive
-- Using host operating system namespaces is security-sensitive
-- Memory and CPU limits should be enforced
+- Credentials should not be hard-coded
+- Clear-text protocols should not be used
+- Excessive Linux capabilities should not be granted
+- Secrets should not be hard-coded **(critical)**
+- Containers should not run in privileged mode
+- Docker sockets should not be exposed
+- Privilege escalation should not be allowed for containers
+- Containers should not share the host operating system namespaces
+- Sensitive file system paths should not be mounted in containers
+- Administration services should not run in containers **(critical)**
+- Memory limits should be enforced
 - Service account permissions should be restricted
 - Wildcards should not be used to define RBAC permissions
-- Secrets should not be stored in environment variables in clear text
+- Kubernetes roles should not allow command execution in pods
+- Storage limits should be enforced
+
+### Code smells
+- Specific version tag for image should be used
+- Memory requests should be specified
+- CPU requests should be specified
+- Ensure whitespace in-between braces in template directives
+- Storage requests should be specified
+- Environment variables for a container should not be duplicated
