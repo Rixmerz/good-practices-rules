@@ -10,15 +10,14 @@ paths:
 <!-- Installed by good-practices-rules. Edit the package, not this copy: the next install replaces it. -->
 # Good practices: Angular
 
-These are **critical**: break them and the component misbehaves or the build checks fail.
+Each rule names its angular-eslint rule; the first four are in the `recommended` config.
 
-- **Implement the interface for every lifecycle hook you use**: `class X implements OnInit, OnDestroy` if it has `ngOnInit` and `ngOnDestroy`.
-- **Delete empty lifecycle hooks** like `ngOnInit() {}`; the CLI generates them and they add nothing.
-- **Don't name an `@Output`/`output()` `on` or prefix it with `on`**: use `selected`, not `onSelected`. Don't name it after a native DOM event like `click`, `change` or `submit` either.
-- **Don't alias inputs** with `@Input('otherName')` or `input({ alias })`.
-- Mark injected services and never-reassigned fields `readonly`. With `inject()`, write `private readonly http = inject(HttpClient)`.
-- Use `ChangeDetectionStrategy.OnPush` for new components, and signals (`signal`, `computed`, `input()`) for component state.
-- Use standalone components and the built-in control flow (`@if`, `@for` with `track`) in new code.
-- Give `*ngFor` a `trackBy` function.
-- Don't call functions or methods in template bindings; use signals, `computed` or pipes.
-- `bypassSecurityTrustHtml`/`Url`/`ResourceUrl` disable Angular's sanitization. Use them only on content you control, never on user input, and leave a comment explaining why. The comment is what justifies it in review.
+- **Implement the interface for every lifecycle hook you use**: `class X implements OnInit, OnDestroy` if it has `ngOnInit` and `ngOnDestroy` (`use-lifecycle-interface`).
+- **Delete empty lifecycle hooks** like `ngOnInit() {}`; the CLI generates them and they add nothing (`no-empty-lifecycle-method`).
+- **Don't name an `@Output`/`output()` `on` or prefix it with `on`**: use `selected`, not `onSelected`. Don't name it after a native DOM event like `click`, `change` or `submit` either (`no-output-on-prefix`, `no-output-native`).
+- **Don't alias inputs** with `@Input('otherName')` or `input({ alias })` (`no-input-rename`).
+- Mark injected services and never-reassigned fields `readonly`. With `inject()`, write `private readonly http = inject(HttpClient)` (`@typescript-eslint/prefer-readonly`).
+- Use `ChangeDetectionStrategy.OnPush` for new components, and signals (`signal`, `computed`, `input()`) for component state (`prefer-on-push-component-change-detection`, `prefer-signals`).
+- Use standalone components and the built-in control flow (`@if`, `@for` with `track`) in new code (`prefer-standalone`, `template/prefer-control-flow`).
+- Give `*ngFor` a `trackBy` function (`template/use-track-by-function`).
+- Don't call functions or methods in template bindings; use signals, `computed` or pipes (`template/no-call-expression`).
