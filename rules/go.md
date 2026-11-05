@@ -6,20 +6,15 @@ paths:
 <!-- Installed by good-practices-rules. Edit the package, not this copy: the next install replaces it. -->
 # Good practices: Go
 
-- **Name functions in MixedCaps with no underscores**: `CreateBooking`/`createBooking`, not `create_booking`. Tests use the `TestXxx` form.
-- Don't shadow predeclared identifiers such as `max`, `min`, `len`, `new`, `error` or `string`.
-- Single-method interfaces end in `-er`: `Reader`, `Notifier`.
-- If the function receives a `ctx`, use it; don't create `context.Background()`/`context.TODO()` inside. Never store a context in a struct field.
-- Put `defer cancel()` right after `context.WithTimeout`/`context.WithCancel`.
-- If an `if` short-statement variable is used only in the condition, inline the expression.
-- Extract nested anonymous structs into named types.
-- Comment every blank import: `_ "github.com/lib/pq" // Postgres driver`.
-- Group consecutive parameters of the same type: `func f(a, b string)`.
-- Error strings start lowercase and have no trailing punctuation.
-- Close what you open with `defer`, right after checking the error: `f, err := os.Open(p); if err != nil {...}; defer f.Close()`.
-- Don't copy values that contain a `sync.Mutex`; pass pointers.
-- Commit `go.sum` together with `go.mod`.
-- Encrypt with AES-GCM; never use ECB, or CBC without authentication.
+- **Name functions in MixedCaps with no underscores**: `CreateBooking`/`createBooking`, not `create_booking`. Tests use the `TestXxx` form (staticcheck ST1003).
+- Don't shadow predeclared identifiers such as `max`, `min`, `len`, `new`, `error` or `string` (revive `redefines-builtin-id`).
+- If the function receives a `ctx`, use it; don't create `context.Background()`/`context.TODO()` inside (`contextcheck`). Never store a context in a struct field (`containedctx`).
+- Put `defer cancel()` right after `context.WithTimeout`/`context.WithCancel` (go vet `lostcancel`).
+- Comment every blank import: `_ "github.com/lib/pq" // Postgres driver` (revive `blank-imports`).
+- Group consecutive parameters of the same type: `func f(a, b string)` (gocritic `paramTypeCombine`).
+- Error strings start lowercase and have no trailing punctuation (staticcheck ST1005).
+- Close what you open with `defer`, right after checking the error: `f, err := os.Open(p); if err != nil {...}; defer f.Close()` (staticcheck SA5001).
+- Don't copy values that contain a `sync.Mutex`; pass pointers (go vet `copylocks`).
 
 ## More rules to follow
 Write code that already complies with each one; the ones marked **critical** break builds or production.
