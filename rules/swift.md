@@ -17,67 +17,67 @@ paths:
 - `UpperCamelCase` types, `lowerCamelCase` identifiers (`type_name`, `identifier_name`).
 
 ## More rules to follow
-Write code that already complies with each one; the ones marked **critical** break builds or production.
+Write code that already complies with each one; the ones marked **critical** break builds or production. Rules marked opt-in or analyzer are off by default; enable them in `.swiftlint.yml` under `opt_in_rules:` or `analyzer_rules:`.
 
 ### Lint
 - force_cast: Force casts should be avoided **(critical)**
 - force_try: Force tries should be avoided **(critical)**
-- unhandled_throwing_task: Errors thrown inside this task are not handled, which may be unexpected **(critical)**
+- unhandled_throwing_task: Errors thrown inside this task are not handled, which may be unexpected **(critical)** (opt-in)
 - duplicate_enum_cases: Enum shouldn't contain multiple cases with the same name **(critical)**
 - duplicate_conditions: Duplicate sets of conditions in the same branch instruction should be avoided **(critical)**
 - dynamic_inline: Avoid using 'dynamic' and '@inline(__always)' together **(critical)**
 - duplicated_key_in_dictionary_literal: Dictionary literals with duplicated keys will crash at runtime
-- identical_operands: Comparing two identical operands is likely a mistake
-- discarded_notification_center_observer: When registering for a notification using a block, the opaque observer that is returned should be stored so it can be removed later
+- identical_operands: Comparing two identical operands is likely a mistake (opt-in)
+- discarded_notification_center_observer: When registering for a notification using a block, the opaque observer that is returned should be stored so it can be removed later (opt-in)
 - notification_center_detachment: An object should only remove itself as an observer in `deinit`
 - ns_number_init_as_function_reference: Passing `NSNumber.init` or `NSDecimalNumber.init` as a function reference is dangerous
 - self_in_property_initialization: `self` refers to the unapplied `NSObject.self()` method, which is likely not expected
-- overridden_super_call: Some overridden methods should always call super
-- prohibited_super_call: Some methods should not call super
+- overridden_super_call: Some overridden methods should always call super (opt-in)
+- prohibited_super_call: Some methods should not call super (opt-in)
 - private_unit_test: Unit tests marked private are silently skipped
-- lower_acl_than_parent: Ensure declarations have a lower access control level than their enclosing parent
-- async_without_await: Declaration should not be async if it doesn't use await
-- unneeded_escaping: The `@escaping` attribute should only be used when the closure actually escapes
-- unneeded_throws_rethrows: Non-throwing functions/properties/closures should not be marked as `throws` or `rethrows`
+- lower_acl_than_parent: Ensure declarations have a lower access control level than their enclosing parent (opt-in)
+- async_without_await: Declaration should not be async if it doesn't use await (opt-in)
+- unneeded_escaping: The `@escaping` attribute should only be used when the closure actually escapes (opt-in)
+- unneeded_throws_rethrows: Non-throwing functions/properties/closures should not be marked as `throws` or `rethrows` (opt-in)
 - unused_closure_parameter: Unused parameter in a closure should be replaced with _
 - unused_setter_value: Setter value is not used
-- unused_declaration: Declarations should be referenced at least once within all files linted
-- unused_import: All imported modules should be required to make the file compile
-- variable_shadowing: Do not shadow variables declared in outer scopes
+- unused_declaration: Declarations should be referenced at least once within all files linted (analyzer, `swiftlint analyze`)
+- unused_import: All imported modules should be required to make the file compile (analyzer, `swiftlint analyze`)
+- variable_shadowing: Do not shadow variables declared in outer scopes (opt-in)
 - blanket_disable_command: `swiftlint:disable` commands should use `next`, `this` or `previous` to disable rules for a single line, or `swiftlint:enable` to re-enable them
 - invisible_character: Disallows invisible characters like zero-width space (U+200B)
 - todo: TODOs and FIXMEs should be resolved
 
 ### Idiomatic
-- force_unwrapping: Force unwrapping should be avoided
-- implicitly_unwrapped_optional: Implicitly unwrapped optionals should be avoided when possible
-- fatal_error_message: A fatalError call should have a message
-- discouraged_optional_boolean: Prefer non-optional booleans over optional booleans
-- discouraged_optional_collection: Prefer empty collection over optional collection
-- fallthrough: Fallthrough should be avoided
+- force_unwrapping: Force unwrapping should be avoided (opt-in)
+- implicitly_unwrapped_optional: Implicitly unwrapped optionals should be avoided when possible (opt-in)
+- fatal_error_message: A fatalError call should have a message (opt-in)
+- discouraged_optional_boolean: Prefer non-optional booleans over optional booleans (opt-in)
+- discouraged_optional_collection: Prefer empty collection over optional collection (opt-in)
+- fallthrough: Fallthrough should be avoided (opt-in)
 - legacy_hashing: Prefer using the `hash(into:)` function instead of overriding `hashValue`
 - legacy_random: Prefer using `type.random(in:)` over legacy functions
 - private_over_fileprivate: Prefer `private` over `fileprivate` declarations
-- redundant_nil_coalescing: Coalescing operator with right-hand side nil is redundant
-- return_value_from_void_function: Returning values from Void functions should be avoided
+- redundant_nil_coalescing: Coalescing operator with right-hand side nil is redundant (opt-in)
+- return_value_from_void_function: Returning values from Void functions should be avoided (opt-in)
 - syntactic_sugar: Shorthand syntactic sugar should be used, i.e. [Int] instead of Array<Int>
-- unavailable_function: Unimplemented functions should be marked as unavailable
+- unavailable_function: Unimplemented functions should be marked as unavailable (opt-in)
 - duplicate_imports: Imports should be unique
-- no_magic_numbers: Magic numbers should be replaced by named constants
+- no_magic_numbers: Magic numbers should be replaced by named constants (opt-in)
 
 ### Metrics
 - cyclomatic_complexity: Complexity of function bodies should be limited
 - function_body_length: Function bodies should not span too many lines
 - function_parameter_count: Number of function parameters should be low
-- closure_body_length: Closure bodies should not span too many lines
+- closure_body_length: Closure bodies should not span too many lines (opt-in)
 - type_body_length: Type bodies should not span too many lines
 - file_length: Files should not span too many lines
 - large_tuple: Tuples shouldn't have too many members. Create a custom type instead
 - nesting: Types should be nested at most 1 level deep, and functions should be nested at most 2 levels deep
 
 ### Performance
-- empty_count: Prefer checking `isEmpty` over comparing `count` to zero
-- first_where: Prefer using `.first(where:)` over `.filter { }.first` in collections
-- contains_over_first_not_nil: Prefer `contains` over `first(where:) != nil` and `firstIndex(where:) != nil`
-- sorted_first_last: Prefer using `min()` or `max()` over `sorted().first` or `sorted().last`
-- reduce_into: Prefer `reduce(into:_:)` over `reduce(_:_:)` for copy-on-write types
+- empty_count: Prefer checking `isEmpty` over comparing `count` to zero (opt-in)
+- first_where: Prefer using `.first(where:)` over `.filter { }.first` in collections (opt-in)
+- contains_over_first_not_nil: Prefer `contains` over `first(where:) != nil` and `firstIndex(where:) != nil` (opt-in)
+- sorted_first_last: Prefer using `min()` or `max()` over `sorted().first` or `sorted().last` (opt-in)
+- reduce_into: Prefer `reduce(into:_:)` over `reduce(_:_:)` for copy-on-write types (opt-in)

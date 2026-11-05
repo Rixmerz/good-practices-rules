@@ -7,6 +7,11 @@ All notable changes to this project are documented here. The format follows
 ## Unreleased
 
 ### Changed
+- Swift rules mark which SwiftLint rules are opt-in or analyzer-only, checked against the SwiftLint source.
+
+## [0.2.2] - 2026-11-04
+
+### Changed
 - Shell, Go and Angular rules now name the linter rule that checks each one (ShellCheck, go vet, staticcheck, revive, angular-eslint).
 
 ### Removed
